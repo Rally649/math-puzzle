@@ -1,4 +1,4 @@
-﻿<html>
+<html>
 <head>
 	<title>数式パズル</title>
 	<meta charset="UTF-8">
@@ -134,11 +134,9 @@
 					
 					// 数式として展開する
 					if(results.length > 0) {
-						textarea.value = (
-							results
-							.map(result => result.show())
-							.reduce((str1, str2) => str1 + '\n' + str2)
-						);
+						let strings = results.map(result => result.show());
+						let simpleStrings = Array.from(new Set(strings));
+						textarea.value = simpleStrings.reduce((str1, str2) => str1 + '\n' + str2);
 					} else {
 						textarea.value = '解なし';
 					}
