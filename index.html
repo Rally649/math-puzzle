@@ -1,0 +1,226 @@
+﻿<html>
+<head>
+	<title>数式パズル</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0">
+	<style>
+		input {
+			width: 5rem;
+		}
+		
+		textarea {
+			resize: none;
+			width: 18.7rem;
+			height: 30rem;
+		}
+	</style>
+	<script>
+		const OPERATORS = {
+			ADD: '+',
+			SUB: '-',
+			MULT: '*',
+			DIV: '/'
+		};
+		
+		class Node {
+			constructor(value, left = null, right = null, operator = null) {
+				this.value = value;
+				this.left = left;
+				this.right = right;
+				this.operator = operator;
+			}
+			show(operatorOfParent = null) {
+				if(this.left == null || this.right == null) {
+					return this.value;
+				} else {
+					let isNeedsBrackets = (operatorOfParent == OPERATORS.MULT || operatorOfParent == OPERATORS.DIV)
+								&& (this.operator == OPERATORS.ADD || this.operator == OPERATORS.SUB);
+					let leftBracket  = isNeedsBrackets ? '(' : '';
+					let rightBracket = isNeedsBrackets ? ')' : '';
+					let left  = this.left.show(this.operator);
+					let right = this.right.show(this.operator);
+					return leftBracket + left + this.operator + right + rightBracket;
+				}
+			}
+		}
+		
+		function getPairs(nodes) {
+			let length = nodes.length;
+			if(length < 2) {
+				throw new Error('nodesが足りません');
+			}
+			let pairs = [];
+			for(let i = 0; i < length - 1; i++) {
+				for(let j = i + 1; j < length; j++) {
+					let pair = [nodes[i], nodes[j]];
+					pairs.push(pair);
+				}
+			}
+			return pairs;
+		}
+		
+		function getNewNodes(a, b) {
+			let newNodes = [];
+			newNodes.push(new Node(a.value + b.value, a, b, OPERATORS.ADD));
+			newNodes.push(new Node(a.value - b.value, a, b, OPERATORS.SUB));
+			newNodes.push(new Node(b.value - a.value, b, a, OPERATORS.SUB));
+			newNodes.push(new Node(a.value * b.value, a, b, OPERATORS.MULT));
+			
+			let isBigger = a.value > b.value;
+			let big   = isBigger ? a : b;
+			let small = isBigger ? b : a;
+			
+			let isDivisible = !Number.isNaN(big) && !Number.isNaN(small) && big % small == 0;
+			if(isDivisible) {
+				newNodes.push(getNode(big.value / small.value, big, small, OPERATORS.DIV));
+			}
+			
+			return newNodes;
+		}
+		
+		function search(arrayOfLeaves) {
+			let newArrayOfLeaves = arrayOfLeaves.map(leaves => {
+				let pairs = getPairs(leaves);
+				let newArrayOfLeaves = pairs.map(pair => {
+					let a = pair[0];
+					let b = pair[1];
+					let newLeaves = getNewNodes(a, b);
+					let others = leaves.filter(leaf => leaf !== a && leaf !== b);
+					let newArrayOfLeaves = newLeaves.map(newLeaf => [newLeaf].concat(others));
+					return newArrayOfLeaves;
+				}).reduce((array1, array2) => array1.concat(array2));
+				return newArrayOfLeaves;
+			}).reduce((array1, array2) => array1.concat(array2));
+			return newArrayOfLeaves;
+		}
+		
+		window.onload = function(){
+			let button = document.getElementsByTagName('button')[0];
+			button.onclick = () => {
+				// 数式を作る数値を取得
+				let selects = document.getElementsByTagName('select');
+				let inputNumbers = Array.from(selects).map(select => parseInt(select.value)).filter(value => value != -1).sort();
+				console.log('inputNumbers', inputNumbers);
+				
+				// 数式の答えを取得
+				let outputNumber = parseInt(document.getElementsByTagName('input')[0].value);
+				console.log('outputNumber', outputNumber);
+				
+				// 数式を作る数値が2個未満なら、個数が足りないので終了
+				if(inputNumbers.length < 2) {
+					console.log('inputNumberの個数が2個未満なので終了');
+					return;
+				}
+				
+				// 「検索中…」と表示
+				let textarea = document.getElementsByTagName('textarea')[0];
+				textarea.value = '検索中…';
+				
+				// 数式を作る数値を葉にする
+				let leaves = inputNumbers.map(num => new Node(num));
+				let arrayOfLeaves = [leaves];
+				
+				// 非同期で検索(非同期にしないと「検索中…」に変わらない)
+				setTimeout(() => {
+					for(let i = 0; i < inputNumbers.length - 1; i++) {
+						arrayOfLeaves = search(arrayOfLeaves);
+					}
+					
+					// 検索結果を根として取得
+					let roots = arrayOfLeaves.map(leaves => leaves[0]);
+					
+					// 数式の答えと一致するものを抽出
+					let results = roots.filter(root => root.value == outputNumber);
+					console.log(results);
+					
+					// 数式として展開する
+					if(results.length > 0) {
+						textarea.value = (
+							results
+							.map(result => result.show())
+							.reduce((str1, str2) => str1 + '\n' + str2)
+						);
+					} else {
+						textarea.value = '解なし';
+					}
+				}, 1);
+			};
+		}
+	</script>
+</head>
+
+<body>
+	<h1>数式パズル</h1>
+	
+	<div>
+		<select>
+			<option value="-1">--</option>
+			<option value="0">0</option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+		</select>
+		<select>
+			<option value="-1">--</option>
+			<option value="0">0</option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+		</select>
+		<select>
+			<option value="-1">--</option>
+			<option value="0">0</option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+		</select>
+		<select>
+			<option value="-1">--</option>
+			<option value="0">0</option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+		</select>
+		<select>
+			<option value="-1">--</option>
+			<option value="0">0</option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+		</select>
+		<input type="number" value="0" step="1"/>
+		<button>検索</button>
+	</div>
+	<textarea disabled></textarea>
+</body>
+</html>
