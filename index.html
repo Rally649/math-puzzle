@@ -33,8 +33,7 @@
 				if(this.left == null || this.right == null) {
 					return this.value;
 				} else {
-					let isNeedsBrackets = (operatorOfParent == OPERATORS.MULT || operatorOfParent == OPERATORS.DIV)
-								&& (this.operator == OPERATORS.ADD || this.operator == OPERATORS.SUB);
+					let isNeedsBrackets = operatorOfParent != null;
 					let leftBracket  = isNeedsBrackets ? '(' : '';
 					let rightBracket = isNeedsBrackets ? ')' : '';
 					let left  = this.left.show(this.operator);
