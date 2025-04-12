@@ -1,4 +1,4 @@
-<html>
+﻿<html>
 <head>
 	<title>数式パズル</title>
 	<meta charset="UTF-8">
@@ -17,8 +17,8 @@
 	<script>
 		const OPERATORS = {
 			ADD: '＋',
-			SUB: '−',
-			MULT: '✕',
+			SUB: '－',
+			MULT: '×',
 			DIV: '÷'
 		};
 		
@@ -29,15 +29,15 @@
 				this.right = right;
 				this.operator = operator;
 			}
-			show(operatorOfParent = null) {
+			show(parent = null) {
 				if(this.left == null || this.right == null) {
 					return this.value;
 				} else {
-					let isNeedsBrackets = operatorOfParent != null;
+					let isNeedsBrackets = parent != null && (this.operator == OPERATORS.ADD || this.operator == OPERATORS.SUB);
 					let leftBracket  = isNeedsBrackets ? '(' : '';
 					let rightBracket = isNeedsBrackets ? ')' : '';
-					let left  = this.left.show(this.operator);
-					let right = this.right.show(this.operator);
+					let left  = this.left.show(this);
+					let right = this.right.show(this);
 					return leftBracket + left + this.operator + right + rightBracket;
 				}
 			}
