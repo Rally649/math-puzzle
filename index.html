@@ -69,7 +69,7 @@
 		}
 		
 		/*
-		function test(){
+		function testGetPair(){
 			let nodes = [];
 			nodes.push(new Node(0));
 			nodes.push(new Node(1));
@@ -109,9 +109,9 @@
 		
 		function search(nodes, i) {
 			let n = nodes.length;
-			let previousTotal = getTotal(n - 1);
-			let pairIndex = parseInt(i / (previousTotal * 5));
-			let operatorIndex = parseInt(i % (previousTotal * 5) / previousTotal);
+			let smallTotal = getTotal(n - 1);
+			let pairIndex = parseInt(i / (smallTotal * 5));
+			let operatorIndex = parseInt(i / (5 ** (n - 2))) % 5;
 			
 			let pair = getPair(nodes, pairIndex);
 			let a = pair[0];
@@ -122,8 +122,19 @@
 			let others = nodes.filter(node => node != a && node != b);
 			let newNodes = [newNode].concat(others);
 			
-			let newI = i % previousTotal;
+			let newI = i % smallTotal;
 			return newNodes.length == 1 ? newNodes[0] : search(newNodes, newI);
+		}
+		
+		function testOperatorIndex() {
+			let n = 4;
+			let total = getTotal(n);
+			for(let i = 0; i < total; i++) {
+				let a = parseInt(i / 25) % 5;
+				let b = parseInt(i / 5) % 5;
+				let c = i % 5;
+				console.log(a, b, c);
+			}
 		}
 		
 		function getTotal(n) {
@@ -168,7 +179,10 @@
 				const searchAll = (_i, waitCycle) => {
 					// i = 0 ～ total - 1 の範囲で検索
 					for(let i = _i; i < total; i++) {
+						// ここで検索↓
 						let root = search(nodes, i);
+						//console.log(root.show());
+						
 						if(root.value == outputNumber) {
 							roots.push(root);
 						}
