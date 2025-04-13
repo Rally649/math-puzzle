@@ -81,7 +81,7 @@
 					let isBigger = a.value >= b.value;
 					let big   = isBigger ? a : b;
 					let small = isBigger ? b : a;
-					let value = big % small == 0 ? big / small : NaN;
+					let value = big.value % small.value == 0 ? big.value / small.value : NaN;
 					return new Node(value, big, small, OPERATORS.DIV);
 				default:
 					throw new Error('無効な演算子です operatorIndex=' + operatorIndex);
@@ -147,7 +147,7 @@
 						
 						let root = search(nodes, i);
 						roots.push(root);
-						// console.log(root.show());
+						console.log(root.show(), root.value);
 					}
 					
 					// 数式の答えと一致するものを抽出
