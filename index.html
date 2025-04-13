@@ -43,54 +43,72 @@
 			}
 		}
 		
-		function getPairs(nodes) {
-			let length = nodes.length;
-			if(length < 2) {
-				throw new Error('nodesが足りません');
+		function getPair(nodes, pairIndex) {
+			let n = nodes.length;
+			if(n < 2) {
+				throw new Error('nodesが足りません n=' + n);
 			}
-			let pairs = [];
-			for(let i = 0; i < length - 1; i++) {
-				for(let j = i + 1; j < length; j++) {
-					let pair = [nodes[i], nodes[j]];
-					pairs.push(pair);
+			
+			function getIndex(x, i = 0) {
+				if(pairIndex < x) {
+					let j = n - (x - pairIndex);
+					return [i, j];
+				} else {
+					let dx = n - 1 - i;
+					return getIndex(x + dx, i + 1);
 				}
 			}
-			return pairs;
+			
+			let index = getIndex(n - 1);
+			let a = nodes[index[0]];
+			let b = nodes[index[1]];
+			
+			let pair = [a, b];
+			return pair;
 		}
 		
-		function getNewNodes(a, b) {
-			let newNodes = [];
-			newNodes.push(new Node(a.value + b.value, a, b, OPERATORS.ADD));
-			newNodes.push(new Node(a.value - b.value, a, b, OPERATORS.SUB));
-			newNodes.push(new Node(b.value - a.value, b, a, OPERATORS.SUB));
-			newNodes.push(new Node(a.value * b.value, a, b, OPERATORS.MULT));
-			
-			let isBigger = a.value > b.value;
-			let big   = isBigger ? a : b;
-			let small = isBigger ? b : a;
-			
-			let isDivisible = !Number.isNaN(big) && !Number.isNaN(small) && big % small == 0;
-			if(isDivisible) {
-				newNodes.push(getNode(big.value / small.value, big, small, OPERATORS.DIV));
+		function getNewNode(a, b, operatorIndex) {
+			switch(operatorIndex) {
+				case 0:
+					return new Node(a.value + b.value, a, b, OPERATORS.ADD);
+				case 1:
+					return new Node(a.value - b.value, a, b, OPERATORS.SUB);
+				case 2:
+					return new Node(b.value - a.value, b, a, OPERATORS.SUB);
+				case 3:
+					return new Node(a.value * b.value, a, b, OPERATORS.MULT);
+				case 4:
+					let isBigger = a.value >= b.value;
+					let big   = isBigger ? a : b;
+					let small = isBigger ? b : a;
+					let value = big % small == 0 ? big / small : NaN;
+					return new Node(value, big, small, OPERATORS.DIV);
+				default:
+					throw new Error('無効な演算子です operatorIndex=' + operatorIndex);
 			}
-			
-			return newNodes;
 		}
 		
-		function search(arrayOfLeaves) {
-			let newArrayOfLeaves = arrayOfLeaves.map(leaves => {
-				let pairs = getPairs(leaves);
-				let newArrayOfLeaves = pairs.map(pair => {
-					let a = pair[0];
-					let b = pair[1];
-					let newLeaves = getNewNodes(a, b);
-					let others = leaves.filter(leaf => leaf !== a && leaf !== b);
-					let newArrayOfLeaves = newLeaves.map(newLeaf => [newLeaf].concat(others));
-					return newArrayOfLeaves;
-				}).reduce((array1, array2) => array1.concat(array2));
-				return newArrayOfLeaves;
-			}).reduce((array1, array2) => array1.concat(array2));
-			return newArrayOfLeaves;
+		function search(nodes, i) {
+			let n = nodes.length;
+			let previousTotal = getTotal(n - 1);
+			let pairIndex = parseInt(i / (previousTotal * 5));
+			let operatorIndex = parseInt(i % (previousTotal * 5) / previousTotal);
+			
+			let pair = getPair(nodes, pairIndex);
+			let a = pair[0];
+			let b = pair[1];
+			
+			let newNode = getNewNode(a, b, operatorIndex);
+			
+			let others = nodes.filter(node => node != a && node != b);
+			let newNodes = [newNode].concat(others);
+			
+			let newI = i % previousTotal;
+			return newNodes.length == 1 ? newNodes[0] : search(newNodes, newI);
+		}
+		
+		function getTotal(n) {
+			return n > 1 ? 5 * n * (n - 1) / 2 * getTotal(n - 1) : 1;
 		}
 		
 		window.onload = function(){
@@ -116,17 +134,21 @@
 				textarea.value = '検索中…';
 				
 				// 数式を作る数値を葉にする
-				let leaves = inputNumbers.map(num => new Node(num));
-				let arrayOfLeaves = [leaves];
+				let nodes = inputNumbers.map(num => new Node(num));
 				
-				// 非同期で検索(非同期にしないと「検索中…」に変わらない)
+				let total = getTotal(inputNumbers.length);
+				console.log('total=' + total);
+				
 				setTimeout(() => {
-					for(let i = 0; i < inputNumbers.length - 1; i++) {
-						arrayOfLeaves = search(arrayOfLeaves);
+					let roots = [];
+					for(let i = 0; i < total; i++) {
+						//let ratio = (i+1) / total * 100;
+						//console.log(ratio.toFixed(2) + '%', (i + 1) + '/' + total);
+						
+						let root = search(nodes, i);
+						roots.push(root);
+						// console.log(root.show());
 					}
-					
-					// 検索結果を根として取得
-					let roots = arrayOfLeaves.map(leaves => leaves[0]);
 					
 					// 数式の答えと一致するものを抽出
 					let results = roots.filter(root => root.value == outputNumber);
@@ -150,6 +172,19 @@
 	<h1>数式パズル</h1>
 	
 	<div>
+		<select>
+			<option value="-1">--</option>
+			<option value="0">0</option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+		</select>
 		<select>
 			<option value="-1">--</option>
 			<option value="0">0</option>
