@@ -29,6 +29,7 @@
 				this.right = right;
 				this.operator = operator;
 			}
+			
 			show(parent = null) {
 				if(this.left == null || this.right == null) {
 					return this.value;
@@ -54,7 +55,7 @@
 					let j = n - (x - pairIndex);
 					return [i, j];
 				} else {
-					let dx = n - 1 - i;
+					let dx = n - 2 - i;
 					return getIndex(x + dx, i + 1);
 				}
 			}
@@ -66,6 +67,24 @@
 			let pair = [a, b];
 			return pair;
 		}
+		
+		/*
+		function test(){
+			let nodes = [];
+			nodes.push(new Node(0));
+			nodes.push(new Node(1));
+			nodes.push(new Node(2));
+			nodes.push(new Node(3));
+			
+			let n = nodes.length * (nodes.length - 1) / 2;
+			for(let i = 0; i < n; i++) {
+				let pair = getPair(nodes, i);
+				let a = pair[0];
+				let b = pair[1];
+				console.log('i=' + i, a.value, b.value);
+			}
+		}
+		*/
 		
 		function getNewNode(a, b, operatorIndex) {
 			switch(operatorIndex) {
@@ -129,40 +148,63 @@
 					return;
 				}
 				
-				// 「検索中…」と表示
-				let textarea = document.getElementsByTagName('textarea')[0];
-				textarea.value = '検索中…';
-				
 				// 数式を作る数値を葉にする
 				let nodes = inputNumbers.map(num => new Node(num));
 				
+				// 全件数
 				let total = getTotal(inputNumbers.length);
 				console.log('total=' + total);
 				
-				setTimeout(() => {
-					let roots = [];
-					for(let i = 0; i < total; i++) {
-						//let ratio = (i+1) / total * 100;
-						//console.log(ratio.toFixed(2) + '%', (i + 1) + '/' + total);
-						
+				// 結果の根を入れる配列
+				let roots = [];
+				
+				// 出力用のテキストエリア
+				let textarea = document.getElementsByTagName('textarea')[0];
+				
+				// 検索ボタン
+				let button = document.getElementsByTagName('button')[0];
+				
+				// 非同期で検索
+				const searchAll = (_i, waitCycle) => {
+					// i = 0 ～ total - 1 の範囲で検索
+					for(let i = _i; i < total; i++) {
 						let root = search(nodes, i);
-						roots.push(root);
-						console.log(root.show(), root.value);
+						if(root.value == outputNumber) {
+							roots.push(root);
+						}
+						if(i % waitCycle == 0){
+							let ratio = (i + 1) / total * 100;
+							console.log(ratio.toFixed(2) + '%', (i + 1) + '/' + total);
+							
+							// 「検索中(00.00%)」と表示
+							textarea.value = '検索中(' + ratio.toFixed(2) + '%)';
+							
+							setTimeout(() => searchAll(i + 1, waitCycle), 1);
+							return;
+						}
 					}
-					
-					// 数式の答えと一致するものを抽出
-					let results = roots.filter(root => root.value == outputNumber);
-					console.log(results);
+					// 検索結果
+					console.log(roots);
 					
 					// 数式として展開する
-					if(results.length > 0) {
-						let strings = results.map(result => result.show());
-						let simpleStrings = Array.from(new Set(strings));
-						textarea.value = simpleStrings.reduce((str1, str2) => str1 + '\n' + str2);
+					if(roots.length > 0) {
+						let results = roots.map(root => root.show());
+						let nonDuplicateResults = Array.from(new Set(results));
+						textarea.value = nonDuplicateResults.reduce((str1, str2) => str1 + '\n' + str2);
 					} else {
 						textarea.value = '解なし';
 					}
-				}, 1);
+					
+					// ボタンを有効にする
+					button.disabled = true;
+				};
+				
+				// ボタンを無効にする
+				button.disabled = true;
+				
+				// waitCycle回毎に1msの間をいれる
+				let waitCycle = 10000;
+				searchAll(0, waitCycle);
 			};
 		}
 	</script>
@@ -172,6 +214,19 @@
 	<h1>数式パズル</h1>
 	
 	<div>
+		<select>
+			<option value="-1">--</option>
+			<option value="0">0</option>
+			<option value="1">1</option>
+			<option value="2">2</option>
+			<option value="3">3</option>
+			<option value="4">4</option>
+			<option value="5">5</option>
+			<option value="6">6</option>
+			<option value="7">7</option>
+			<option value="8">8</option>
+			<option value="9">9</option>
+		</select>
 		<select>
 			<option value="-1">--</option>
 			<option value="0">0</option>
