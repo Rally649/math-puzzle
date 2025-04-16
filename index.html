@@ -34,7 +34,7 @@
 				if(this.left == null || this.right == null) {
 					return this.value;
 				} else {
-					let isNeedsBrackets = parent != null && (this.operator == OPERATORS.ADD || this.operator == OPERATORS.SUB);
+					let isNeedsBrackets = parent != null && this.operator != OPERATORS.MULT;
 					let leftBracket  = isNeedsBrackets ? '(' : '';
 					let rightBracket = isNeedsBrackets ? ')' : '';
 					let left  = this.left.show(this);
@@ -185,7 +185,7 @@
 						}
 						if(i % waitCycle == 0){
 							let ratio = (i + 1) / total * 100;
-							console.log(ratio.toFixed(2) + '%', (i + 1) + '/' + total);
+							//console.log(ratio.toFixed(2) + '%', (i + 1) + '/' + total);
 							
 							// 「検索中(00.00%)」と表示
 							textarea.value = '検索中(' + ratio.toFixed(2) + '%)';
